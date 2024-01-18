@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Rowdies:wght@300;700&display=swap" rel="stylesheet">
+  <style>
+    h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 50px;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    header {
+      background-color: #9f7ae4;
+      color: #fff;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .board-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column; /* Adjusted to column layout */
+      height: 80vh;
+    }
+
+    .board {
+      max-width: 400px;
+      overflow-x: auto; 
+      display: grid;
+      grid-template-columns: repeat(3, 120px);
+      grid-gap: 15px;
+      border: 4px ridge #0a0909;
+      padding: 15px;
+      background-color: #eee;
+      border-radius: 10px;
+      padding-top: 25px;
+    }
+
+    .cell {
+      width: 120px;
+      height: 120px;
+      border: 2px solid #ccc;
+      font-size: 36px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: -15px;
+      transition: background-color 0.3s;
+    }
+
+    .cross {
+      color: red;
+    }
+
+    .circle {
+      color: green;
+    }
+
+    #reset-button {
+      background-color: red;
+      color: #fff;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px; /* Adjusted margin */
+    }
+
+    #status {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+
+    .win-pattern {
+      background-color: transparent;
+      transition: background-color 1s;
+    }
+
+    .win-pattern.red {
+      background-color: rgba(255, 0, 0, 0.5);
+    }
+
+    .win-pattern.green {
+      background-color: rgba(0, 255, 0, 0.5);
+    }
+  </style>
+  <title>Tic-Tac-Toe</title>
+</head>
+<body>
+  <header>
+    <h1>Tic-Tac-Toe</h1>
+  </header>
+  <div class="board-container">
+    <div class="board" id="board"></div>
+    <button id="reset-button" onclick="resetGame()">Reset Game</button> <!-- Reset button below the board -->
+  </div>
+  <script>
+    // Your JavaScript code remains the same
+    const boardElement = document.getElementById('board');
+    const statusElement = document.getElementById('status');
+    const cells = Array.from({ length: 9 });
+
+    let currentPlayer = 'X';
+    let gameBoard = ['', '', '', '', '', '', '', '', ''];
+    let gameOver = false;
+
+    function renderBoard() {
+      boardElement.innerHTML = '';
+      gameBoard.forEach((value, index) => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.textContent = value;
+        cell.addEventListener('click', () => handleCellClick(index));
+        boardElement.appendChild(cell);
+        cells[index] = cell;
+      });
+    }
+    function resetGame() {
+      currentPlayer = 'X';
+      gameBoard = ['', '', '', '', '', '', '', '', ''];
+      gameOver = false;
+
+      cells.forEach(cell => cell.classList.remove('win-pattern', 'red', 'green'));
+
+      cells.forEach(cell => cell.textContent = '');
+      statusElement.textContent = `It's ${currentPlayer === 'X' ? 'your' : 'computer'} turn`;
+    }
+
+    function handleCellClick(index) {
+      if (gameOver || gameBoard[index] !== '') return;
+
+      gameBoard[index] = currentPlayer;
+      cells[index].textContent = currentPlayer;
+      checkWinner();
+
+      if (!gameOver) {
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        statusElement.textContent = `It's ${currentPlayer === 'X' ? 'your' : 'computer'} turn`;
+
+        if (currentPlayer === 'O') {
+          makeAiMove();
+        }
+      }
+    }
+
+    function makeAiMove() {
+      const emptyCells = gameBoard.reduce((acc, val, index) => {
+        if (val === '') acc.push(index);
+        return acc;
+      }, []);
+
+      if (emptyCells.length === 0 || gameOver) return;
+
+      const randomIndex = Math.floor(Math.random() * emptyCells.length);
+      const aiMove = emptyCells[randomIndex];
+
+      setTimeout(() => handleCellClick(aiMove), 500);
+    }
+
+    function checkWinner() {
+      const winPatterns = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+        [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+        [0, 4, 8], [2, 4, 6]             // diagonals
+      ];
+
+      for (const pattern of winPatterns) {
+        const [a, b, c] = pattern;
+        if (gameBoard[a] && gameBoard[a] === gameBoard[b] && gameBoard[b] === gameBoard[c]) {
+          gameOver = true;
+          cells[a].classList.add('win-pattern', gameBoard[a] === 'X' ? 'red' : 'green');
+          cells[b].classList.add('win-pattern', gameBoard[a] === 'X' ? 'red' : 'green');
+          cells[c].classList.add('win-pattern', gameBoard[a] === 'X' ? 'red' : 'green');
+          statusElement.textContent = `Player ${gameBoard[a]} wins!`;
+          return;
+        }
+      }
+
+      if (!gameBoard.includes('')) {
+        gameOver = true;
+        statusElement.textContent = 'It\'s a draw!';
+      }
+    }
+
+    renderBoard();
+
+  </script>
+</body>
+</html>
